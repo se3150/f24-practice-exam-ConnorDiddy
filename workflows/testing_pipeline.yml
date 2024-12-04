@@ -1,0 +1,35 @@
+name: Run Tests
+on: [push]
+jobs:
+  RunUnitTests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+      - name: Install pytest
+        run: pip install pytest pytest-spec pytest-describe
+      - name: Run pytest
+        run: pytest --spec --color=yes test_battery.py
+  RunFunctionalTests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+      - name: Install Google Chrome
+        run: |
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -f install -y
+      - name: Install chromedriver
+        uses: nanasess/setup-chromedriver@master
+        with:
+          chrome-version: 'latest'
+      - name: Install behave
+        run: pip install behave behave-webdriver
+      - name: Run Behave tests
+        env:
+          DISPLAY: ':99'  # Necessary for some headless Chrome configurations
+        run: |
+          # Start Xvfb in the background to simulate a display
+          Xvfb :99 -screen 0 1920x1080x24 &
+          # Run behave with Chrome in headless mode
+          behave --define CHROME_HEADLESS=true
